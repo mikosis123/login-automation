@@ -4,7 +4,7 @@ class LoginPage {
     this.usernameInput = page.getByPlaceholder('Your email');
     this.passwordInput = page.getByPlaceholder('**********');
     this.loginButton = page.getByRole('button', { name: 'Login' });
-    this.errorMessage = page.locator('.alert-error'); // adjust later
+    this.errorMessage = page.getByRole('alert').first();
   }
 
   async goto() {
@@ -15,11 +15,11 @@ class LoginPage {
     await this.usernameInput.click();
     await this.usernameInput.fill(''); // Clear if any
     await this.usernameInput.pressSequentially(username, { delay: 50 });
-    
+
     await this.passwordInput.click();
     await this.passwordInput.fill(''); // Clear if any
     await this.passwordInput.pressSequentially(password, { delay: 50 });
-    
+
     await this.page.waitForTimeout(500); // Small pause before clicking
     await this.loginButton.click();
   }
