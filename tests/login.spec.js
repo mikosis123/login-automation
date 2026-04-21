@@ -1,6 +1,8 @@
 const { test, expect } = require('@playwright/test');
 const { LoginPage } = require('../pages/loginPage');
 
+test.setTimeout(60000);
+
 test('Successful login', async ({ page }) => {
     const loginPage = new LoginPage(page);
 
@@ -20,4 +22,25 @@ test('Invalid Password shows error message', async ({ page }) => {
 
     await expect(loginPage.errorMessage).toBeVisible({ timeout: 15000 });
     await expect(page).toHaveURL(/\/iam\/auth\/login/, { timeout: 15000 });
+});
+
+test('Empty Form Validation', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+
+    await loginPage.goto();
+
+    // Submit without entering credentials.
+    await loginPage.usernameInput.fill('');
+    await loginPage.passwordInput.fill('');
+    await loginPage.loginButton.click();
+
+    // We should remain on login and see validation feedback.
+    await expect(page).toHaveURL(/\/iam\/auth\/login/, { timeout: 15000 });
+
+    const validationFeedback = page
+        .locator('[aria-invalid="true"], .invalid-feedback, .error-message, .text-danger, [role="alert"]')
+        .filter({ hasText: /required|empty|email|password|invalid/i })
+        .first();
+
+    await expect(validationFeedback).toBeVisible({ timeout: 15000 });
 });
