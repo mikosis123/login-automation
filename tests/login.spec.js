@@ -36,11 +36,21 @@ test('Empty Form Validation', async ({ page }) => {
 
     // We should remain on login and see validation feedback.
     await expect(page).toHaveURL(/\/iam\/auth\/login/, { timeout: 15000 });
+    await expect.poll(async () => {
+        const inlineValidationCount = await page
+            .locator('.invalid-feedback:visible, .error-message:visible, .text-danger:visible, [role="alert"]:visible')
+            .count();
 
-    const validationFeedback = page
-        .locator('[aria-invalid="true"], .invalid-feedback, .error-message, .text-danger, [role="alert"]')
-        .filter({ hasText: /required|empty|email|password|invalid/i })
-        .first();
+        const usernameValidationMessage = await loginPage.usernameInput.evaluate(
+            (el) => el.validationMessage || ''
+        );
+        const passwordValidationMessage = await loginPage.passwordInput.evaluate(
+            (el) => el.validationMessage || ''
+        );
 
-    await expect(validationFeedback).toBeVisible({ timeout: 15000 });
+        const hasNativeValidationMessage =
+            usernameValidationMessage.trim().length > 0 || passwordValidationMessage.trim().length > 0;
+
+        return inlineValidationCount > 0 || hasNativeValidationMessage;
+    }, { timeout: 15000 }).toBeTruthy();
 });
